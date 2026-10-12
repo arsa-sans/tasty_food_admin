@@ -1,0 +1,40 @@
+name: tasty_food_admin
+description: "Admin Dashboard Mobile App for Tasty Food using MVVM Architecture."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management (MVVM)
+  provider: ^6.1.2
+
+  # Networking & HTTP
+  http: ^1.2.2
+
+  # Local Storage & Preferences
+  shared_preferences: ^2.3.2
+
+  # Formatting (Indonesian Rupiah currency & Dates)
+  intl: ^0.19.0
+
+  # Typography & Design
+  google_fonts: ^6.2.1
+
+  # Image handling
+  cached_network_image: ^3.4.1
+  image_picker: ^1.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
