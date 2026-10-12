@@ -15,6 +15,7 @@ dependencies:
 
   # Networking & HTTP
   http: ^1.2.2
+  http_parser: ^4.1.2
 
   # Local Storage & Preferences
   shared_preferences: ^2.3.2
@@ -28,6 +29,9 @@ dependencies:
   # Image handling
   cached_network_image: ^3.4.1
   image_picker: ^1.1.2
+
+  # Shimmer Loading Effect
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:
