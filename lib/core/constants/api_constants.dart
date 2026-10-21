@@ -1,6 +1,4 @@
 class ApiConstants {
-  // Default base URL. Can be changed dynamically via Settings in the app.
-  // When testing on Android Emulator use 'http://10.0.2.2:8000' or live hosted URL.
   static const String defaultBaseUrl = 'https://arsa.1-cianjur.26.cyberwarrior.co.id'; // Replaceable in app settings
   static const String localEmulatorUrl = 'http://10.0.2.2:8000';
   static const String localDeviceUrl = 'http://192.168.1.100:8000';
