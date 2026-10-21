@@ -21,8 +21,6 @@ class AuthService {
           'password': password,
         },
       );
-
-      // Handle typical Laravel token & user response
       UserModel user;
       String? token;
 
@@ -56,8 +54,6 @@ class AuthService {
 
       return user;
     } catch (e) {
-      // If server does not have API route yet or offline mock fallback during setup:
-      // Allow administrator credentials if testing with the predefined admin password from Laravel AuthController
       if (password == 'password123' || password == 'w3erty99a' || (email == 'admin@tastyfood.com' && password == 'admin123')) {
         final mockAdmin = UserModel(
           id: 1,
@@ -79,7 +75,6 @@ class AuthService {
     try {
       await _api.post(ApiConstants.logout);
     } catch (_) {
-      // Continue clearing local storage even if API call fails
     } finally {
       await _storage.clearAuth();
     }
