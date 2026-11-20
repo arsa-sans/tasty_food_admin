@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'animated_pressable.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -10,6 +11,7 @@ class CustomButton extends StatelessWidget {
   final Color? backgroundColor;
   final Color? textColor;
   final double? width;
+  final double height;
 
   const CustomButton({
     super.key,
@@ -21,6 +23,7 @@ class CustomButton extends StatelessWidget {
     this.backgroundColor,
     this.textColor,
     this.width,
+    this.height = 46.0,
   });
 
   @override
@@ -30,7 +33,7 @@ class CustomButton extends StatelessWidget {
             height: 20,
             width: 20,
             child: CircularProgressIndicator(
-              strokeWidth: 2.5,
+              strokeWidth: 2.2,
               valueColor: AlwaysStoppedAnimation<Color>(
                 isOutlined ? AppColors.primary : Colors.white,
               ),
@@ -44,31 +47,57 @@ class CustomButton extends StatelessWidget {
                 Icon(icon, size: 18),
                 const SizedBox(width: 8),
               ],
-              Text(text),
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: isOutlined
+                      ? (textColor ?? AppColors.textPrimary)
+                      : (textColor ?? Colors.white),
+                  letterSpacing: -0.2,
+                ),
+              ),
             ],
           );
 
-    final buttonWidget = isOutlined
-        ? OutlinedButton(
-            onPressed: isLoading ? null : onPressed,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: textColor ?? AppColors.textPrimary,
-              side: BorderSide(color: backgroundColor ?? AppColors.border),
+    final buttonDecoration = isOutlined
+        ? BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: backgroundColor ?? AppColors.border,
+              width: 1.2,
             ),
-            child: effectiveChild,
           )
-        : ElevatedButton(
-            onPressed: isLoading ? null : onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: backgroundColor ?? AppColors.primary,
-              foregroundColor: textColor ?? Colors.white,
-            ),
-            child: effectiveChild,
+        : BoxDecoration(
+            color: onPressed == null || isLoading
+                ? (backgroundColor ?? AppColors.primary).withValues(alpha: 0.5)
+                : (backgroundColor ?? AppColors.primary),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: onPressed != null && !isLoading && !isOutlined
+                ? [
+                    BoxShadow(
+                      color: (backgroundColor ?? AppColors.primary).withValues(alpha: 0.22),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
           );
 
-    if (width != null) {
-      return SizedBox(width: width, child: buttonWidget);
-    }
-    return buttonWidget;
+    return AnimatedPressable(
+      onTap: isLoading ? null : onPressed,
+      pressedScale: 0.97,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: width,
+        height: height,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: buttonDecoration,
+        child: effectiveChild,
+      ),
+    );
   }
 }
