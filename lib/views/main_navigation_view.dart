@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/responsive.dart';
+import '../../core/widgets/animated_pressable.dart';
+import '../../core/widgets/pulsing_badge.dart';
 import '../../viewmodels/message_viewmodel.dart';
 import '../../viewmodels/order_viewmodel.dart';
 import '../../viewmodels/dashboard_viewmodel.dart';
@@ -25,7 +27,6 @@ class MainNavigationView extends StatefulWidget {
 class _MainNavigationViewState extends State<MainNavigationView> {
   int _selectedIndex = 0;
 
-  // Lazy tab loading: only instantiated when navigated to
   final Set<int> _loadedTabs = {0};
 
   final List<String> _titles = [
@@ -87,6 +88,12 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         context.read<MessageViewModel>().fetchMessages();
         break;
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Memperbarui data...'),
+        duration: Duration(milliseconds: 900),
+      ),
+    );
   }
 
   @override
@@ -95,7 +102,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
     final unreadMessages = context.watch<MessageViewModel>().unreadCount;
 
     if (isDesktopOrTablet) {
-      // Responsive Tablet / Desktop Layout with Navigation Rail
       return Scaffold(
         body: Row(
           children: [
@@ -203,7 +209,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
       );
     }
 
-    // Responsive Mobile Phone Layout
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -214,13 +219,19 @@ class _MainNavigationViewState extends State<MainNavigationView> {
         title: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 36,
+              height: 36,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.04),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(6),
@@ -242,23 +253,17 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   Row(
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      const Text(
-                        'Outlet Cianjur • Toko Buka',
+                    children: const [
+                      PulsingDot(color: AppColors.success, size: 6),
+                      SizedBox(width: 5),
+                      Text(
+                        'Outlet Cianjur • Buka',
                         style: TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -288,14 +293,13 @@ class _MainNavigationViewState extends State<MainNavigationView> {
             ),
             onPressed: () => _onSelectTab(6),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
         ],
       ),
       drawer: Drawer(
         backgroundColor: Colors.white,
         child: Column(
           children: [
-            // Modern Merchant Drawer Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 52, 20, 20),
@@ -308,8 +312,8 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                   Row(
                     children: [
                       Container(
-                        width: 48,
-                        height: 48,
+                        width: 50,
+                        height: 50,
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -344,13 +348,20 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                                 color: AppColors.success.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                '● Toko Buka (09:00 - 22:00)',
-                                style: TextStyle(
-                                  color: Color(0xFF6EE7B7),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  PulsingDot(color: Color(0xFF6EE7B7), size: 5),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Buka (09:00 - 22:00)',
+                                    style: TextStyle(
+                                      color: Color(0xFF6EE7B7),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -365,8 +376,8 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                       color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(Icons.storefront_rounded, color: Colors.white70, size: 16),
                         SizedBox(width: 8),
                         Expanded(
@@ -383,7 +394,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                 ],
               ),
             ),
-            // Menu Items List
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -408,10 +418,10 @@ class _MainNavigationViewState extends State<MainNavigationView> {
               ),
             ),
             const Divider(height: 1, color: AppColors.border),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.verified_user_rounded, color: AppColors.success, size: 16),
                   SizedBox(width: 8),
                   Expanded(
@@ -436,49 +446,61 @@ class _MainNavigationViewState extends State<MainNavigationView> {
           border: const Border(top: BorderSide(color: AppColors.border, width: 1)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              offset: const Offset(0, -4),
+              color: const Color(0xFF1E293B).withValues(alpha: 0.04),
+              offset: const Offset(0, -3),
               blurRadius: 10,
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          currentIndex: _selectedIndex > 4 ? 0 : _selectedIndex,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textMuted,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
-          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
-          type: BottomNavigationBarType.fixed,
-          onTap: (index) {
-            _onSelectTab(index);
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard_rounded),
-              label: 'Beranda',
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navBarItem(0, Icons.dashboard_outlined, Icons.dashboard_rounded, 'Beranda'),
+                _navBarItem(1, Icons.receipt_long_outlined, Icons.receipt_long_rounded, 'Pesanan'),
+                _navBarItem(2, Icons.restaurant_outlined, Icons.restaurant_rounded, 'Menu'),
+                _navBarItem(3, Icons.payments_outlined, Icons.payments_rounded, 'Bayar'),
+                _navBarItem(7, Icons.tune_outlined, Icons.tune_rounded, 'Lainnya'),
+              ],
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long_outlined),
-              activeIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Pesanan',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _navBarItem(int index, IconData icon, IconData activeIcon, String label) {
+    final isSelected = _selectedIndex == index;
+
+    return AnimatedPressable(
+      onTap: () => _onSelectTab(index),
+      pressedScale: 0.94,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryLight : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? AppColors.primary : AppColors.textMuted,
+              size: 22,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant_outlined),
-              activeIcon: Icon(Icons.restaurant_rounded),
-              label: 'Menu',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.payments_outlined),
-              activeIcon: Icon(Icons.payments_rounded),
-              label: 'Bayar',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tune_rounded),
-              activeIcon: Icon(Icons.tune_rounded),
-              label: 'Lainnya',
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.primaryDark : AppColors.textSecondary,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -532,7 +554,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
             : (isSelected ? const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 18) : null),
         onTap: () {
           _onSelectTab(index);
-          Navigator.pop(context); // Close drawer
+          Navigator.pop(context);
         },
       ),
     );
