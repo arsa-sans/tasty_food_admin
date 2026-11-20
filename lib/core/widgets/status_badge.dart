@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'pulsing_badge.dart';
 
 enum BadgeType { orderStatus, paymentStatus, paymentType, booleanStatus }
 
@@ -20,36 +21,38 @@ class StatusBadge extends StatelessWidget {
     Color bg;
     Color fg;
     String label;
+    bool isUrgent = false;
 
     if (type == BadgeType.orderStatus) {
       switch (status) {
         case 'menunggu_konfirmasi':
-          bg = const Color(0xFFFFF7ED); // Soft orange/amber
+          bg = const Color(0xFFFFF7ED);
           fg = const Color(0xFFC2410C);
           label = 'Menunggu Konfirmasi';
+          isUrgent = true;
           break;
         case 'dikonfirmasi':
-          bg = const Color(0xFFEFF6FF); // Soft blue
+          bg = const Color(0xFFEFF6FF);
           fg = const Color(0xFF1D4ED8);
           label = 'Dikonfirmasi';
           break;
         case 'sedang_dimasak':
-          bg = const Color(0xFFFAF5FF); // Soft purple
+          bg = const Color(0xFFFAF5FF);
           fg = const Color(0xFF7E22CE);
           label = 'Sedang Dimasak';
           break;
         case 'dalam_pengiriman':
-          bg = const Color(0xFFEEF2FF); // Soft indigo
-          fg = const Color(0xFF4338CA);
+          bg = const Color(0xFFF0F9FF);
+          fg = const Color(0xFF0369A1);
           label = 'Dalam Pengiriman';
           break;
         case 'selesai':
-          bg = const Color(0xFFECFDF5); // Soft emerald
+          bg = const Color(0xFFECFDF5);
           fg = const Color(0xFF047857);
           label = 'Selesai';
           break;
         case 'dibatalkan':
-          bg = const Color(0xFFFEF2F2); // Soft red
+          bg = const Color(0xFFFEF2F2);
           fg = const Color(0xFFB91C1C);
           label = 'Dibatalkan';
           break;
@@ -69,6 +72,7 @@ class StatusBadge extends StatelessWidget {
           bg = const Color(0xFFFFFBEB);
           fg = const Color(0xFFB45309);
           label = 'Menunggu Verifikasi';
+          isUrgent = true;
           break;
         case 'ditolak':
           bg = const Color(0xFFFEF2F2);
@@ -78,7 +82,7 @@ class StatusBadge extends StatelessWidget {
         case 'belum_bayar':
         default:
           bg = const Color(0xFFF1F5F9);
-          fg = const Color(0xFF64748B);
+          fg = const Color(0xFF475569);
           label = 'Belum Bayar';
       }
     } else if (type == BadgeType.paymentType) {
@@ -106,7 +110,7 @@ class StatusBadge extends StatelessWidget {
     } else {
       final isTrue = status == '1' || status == 'true' || status == 'published' || status == 'aktif';
       bg = isTrue ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9);
-      fg = isTrue ? const Color(0xFF047857) : const Color(0xFF64748B);
+      fg = isTrue ? const Color(0xFF047857) : const Color(0xFF475569);
       label = isTrue ? 'Tersedia' : 'Habis / Nonaktif';
     }
 
@@ -115,21 +119,25 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: fg.withValues(alpha: 0.25), width: 1),
+        border: Border.all(color: fg.withValues(alpha: 0.22), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (showDot)
-            Container(
-              width: 6,
-              height: 6,
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                color: fg,
-                shape: BoxShape.circle,
+          if (showDot) ...[
+            if (isUrgent)
+              PulsingDot(color: fg, size: 6)
+            else
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: fg,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
+            const SizedBox(width: 6),
+          ],
           Text(
             label,
             style: TextStyle(
