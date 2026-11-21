@@ -86,6 +86,13 @@ class _MenuFormViewState extends State<MenuFormView> {
           backgroundColor: AppColors.success,
         ),
       );
+    } else if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(menuVm.errorMessage ?? 'Gagal menyimpan menu. Periksa kembali input data.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
     }
   }
 
