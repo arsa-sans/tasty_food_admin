@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/animated_pressable.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/staggered_entrance.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../core/widgets/app_cached_image.dart';
 import '../../viewmodels/berita_viewmodel.dart';
@@ -59,21 +61,44 @@ class _BeritaListViewState extends State<BeritaListView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: AnimatedPressable(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const BeritaFormView()),
           );
         },
-        backgroundColor: AppColors.primary,
-        elevation: 3,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Tulis Berita', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+        pressedScale: 0.95,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Tulis Berita',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
-          // 1. Filter Tabs (Semua, Published, Draft)
+          // Filter Tabs (Semua, Published, Draft)
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -89,7 +114,7 @@ class _BeritaListViewState extends State<BeritaListView> {
           ),
           const Divider(height: 1, color: AppColors.border),
 
-          // 2. Berita List with Shimmer
+          // Berita List with Staggered Entrance
           Expanded(
             child: beritaVm.isLoading
                 ? const BeritaListShimmer()
@@ -108,118 +133,122 @@ class _BeritaListViewState extends State<BeritaListView> {
                             separatorBuilder: (_, __) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final b = beritas[index];
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.02),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      AppCachedImage(
-                                        imageUrl: b.imageUrl ?? '',
-                                        width: 84,
-                                        height: 84,
-                                        borderRadius: BorderRadius.circular(12),
-                                        memCacheWidth: 260,
-                                        memCacheHeight: 260,
-                                        fallbackIcon: Icons.article_rounded,
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: b.isPublished ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: Text(
-                                                    b.status.toUpperCase(),
-                                                    style: TextStyle(
-                                                      color: b.isPublished ? const Color(0xFF15803D) : const Color(0xFFB45309),
-                                                      fontSize: 10,
-                                                      fontWeight: FontWeight.w800,
-                                                    ),
-                                                  ),
-                                                ),
-                                                PopupMenuButton<String>(
-                                                  icon: const Icon(Icons.more_vert_rounded, size: 20, color: AppColors.textMuted),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                                  onSelected: (val) {
-                                                    if (val == 'edit') {
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (_) => BeritaFormView(berita: b),
-                                                        ),
-                                                      );
-                                                    } else if (val == 'delete') {
-                                                      _confirmDelete(b.id, b.judul);
-                                                    }
-                                                  },
-                                                  itemBuilder: (_) => [
-                                                    const PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(Icons.edit_rounded, size: 18, color: AppColors.info),
-                                                          SizedBox(width: 8),
-                                                          Text('Edit Berita'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    const PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
-                                                          SizedBox(width: 8),
-                                                          Text('Hapus Berita'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              b.judul,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 14,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              b.ringkasan,
-                                              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
+
+                              return StaggeredEntrance(
+                                index: index,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.border),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF1E293B).withValues(alpha: 0.02),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        AppCachedImage(
+                                          imageUrl: b.imageUrl ?? '',
+                                          width: 84,
+                                          height: 84,
+                                          borderRadius: BorderRadius.circular(12),
+                                          memCacheWidth: 260,
+                                          memCacheHeight: 260,
+                                          fallbackIcon: Icons.article_rounded,
+                                        ),
+                                        const SizedBox(width: 14),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: b.isPublished ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      b.status.toUpperCase(),
+                                                      style: TextStyle(
+                                                        color: b.isPublished ? const Color(0xFF15803D) : const Color(0xFFB45309),
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w800,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  PopupMenuButton<String>(
+                                                    icon: const Icon(Icons.more_vert_rounded, size: 20, color: AppColors.textMuted),
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                    onSelected: (val) {
+                                                      if (val == 'edit') {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder: (_) => BeritaFormView(berita: b),
+                                                          ),
+                                                        );
+                                                      } else if (val == 'delete') {
+                                                        _confirmDelete(b.id, b.judul);
+                                                      }
+                                                    },
+                                                    itemBuilder: (_) => [
+                                                      const PopupMenuItem(
+                                                        value: 'edit',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.edit_rounded, size: 18, color: AppColors.info),
+                                                            SizedBox(width: 8),
+                                                            Text('Edit Berita'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                                            SizedBox(width: 8),
+                                                            Text('Hapus Berita'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                b.judul,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w800,
+                                                  fontSize: 14,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                b.ringkasan,
+                                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
@@ -234,18 +263,28 @@ class _BeritaListViewState extends State<BeritaListView> {
 
   Widget _filterChip(BeritaViewModel vm, String status) {
     final isSelected = vm.statusFilter == status;
-    return InkWell(
+    return AnimatedPressable(
       onTap: () => vm.setStatusFilter(status),
+      pressedScale: 0.95,
       borderRadius: BorderRadius.circular(20),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.secondary : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? AppColors.secondary : AppColors.border,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.secondary.withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           status,
