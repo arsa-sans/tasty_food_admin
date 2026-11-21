@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/animated_pressable.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/staggered_entrance.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../viewmodels/payment_method_viewmodel.dart';
@@ -70,26 +72,53 @@ class _PaymentMethodListViewState extends State<PaymentMethodListView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: AnimatedPressable(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const PaymentMethodFormView()),
           );
         },
-        backgroundColor: AppColors.primary,
-        elevation: 3,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text('Tambah Metode', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+        pressedScale: 0.95,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Tambah Metode',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       body: Column(
         children: [
-          // 1. Filter Chips Carousel
+          // Filter Chips Carousel
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: SizedBox(
-              height: 34,
+              height: 36,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: filterTypes.length,
@@ -98,18 +127,28 @@ class _PaymentMethodListViewState extends State<PaymentMethodListView> {
                   final item = filterTypes[index];
                   final isSelected = payVm.selectedTipe == item['val'];
 
-                  return InkWell(
+                  return AnimatedPressable(
                     onTap: () => payVm.setTipe(item['val']!),
+                    pressedScale: 0.95,
                     borderRadius: BorderRadius.circular(20),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected ? AppColors.secondary : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected ? AppColors.secondary : AppColors.border,
                         ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.secondary.withValues(alpha: 0.15),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
                         item['label']!,
@@ -127,7 +166,7 @@ class _PaymentMethodListViewState extends State<PaymentMethodListView> {
           ),
           const Divider(height: 1, color: AppColors.border),
 
-          // 2. Methods List with Shimmer
+          // Methods List with Staggered Entrance
           Expanded(
             child: payVm.isLoading
                 ? const PaymentMethodListShimmer()
@@ -160,185 +199,188 @@ class _PaymentMethodListViewState extends State<PaymentMethodListView> {
                                 methodColor = const Color(0xFF047857);
                               }
 
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.02),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(14),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(10),
-                                                decoration: BoxDecoration(
-                                                  color: methodColor.withValues(alpha: 0.12),
-                                                  borderRadius: BorderRadius.circular(12),
-                                                ),
-                                                child: Icon(methodIcon, color: methodColor, size: 22),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    method.nama,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.w800,
-                                                      fontSize: 14,
-                                                      color: AppColors.textPrimary,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 3),
-                                                  StatusBadge(
-                                                    status: method.tipe,
-                                                    type: BadgeType.paymentType,
-                                                    showDot: false,
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                          PopupMenuButton<String>(
-                                            icon: const Icon(Icons.more_vert_rounded, size: 20, color: AppColors.textMuted),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                            onSelected: (val) {
-                                              if (val == 'edit') {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (_) => PaymentMethodFormView(method: method),
-                                                  ),
-                                                );
-                                              } else if (val == 'delete') {
-                                                _confirmDelete(method.id, method.nama);
-                                              }
-                                            },
-                                            itemBuilder: (_) => [
-                                              const PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.edit_rounded, size: 18, color: AppColors.info),
-                                                    SizedBox(width: 8),
-                                                    Text('Edit Metode'),
-                                                  ],
-                                                ),
-                                              ),
-                                              const PopupMenuItem(
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
-                                                    SizedBox(width: 8),
-                                                    Text('Hapus Metode'),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-
-                                      // Account Info
-                                      if (method.nomorRekening != null && method.nomorRekening!.isNotEmpty) ...[
-                                        const SizedBox(height: 12),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF8FAFC),
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  const Icon(Icons.credit_card_rounded, size: 16, color: AppColors.textMuted),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    '${method.nomorRekening} (${method.atasNama ?? '-'})',
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      fontWeight: FontWeight.w700,
-                                                      color: AppColors.textPrimary,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              InkWell(
-                                                onTap: () {
-                                                  Clipboard.setData(ClipboardData(text: method.nomorRekening!));
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text('Nomor disalin ke clipboard'),
-                                                      duration: Duration(seconds: 1),
-                                                    ),
-                                                  );
-                                                },
-                                                child: const Icon(Icons.copy_rounded, size: 14, color: AppColors.textMuted),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-
-                                      const SizedBox(height: 10),
-                                      const Divider(height: 1, color: AppColors.border),
-                                      const SizedBox(height: 6),
-
-                                      // Bottom active toggle
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              Container(
-                                                width: 8,
-                                                height: 8,
-                                                decoration: BoxDecoration(
-                                                  color: method.isAktif ? const Color(0xFF16A34A) : AppColors.textMuted,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 6),
-                                              Text(
-                                                method.isAktif ? 'Aktif (Pelanggan dapat memilih)' : 'Nonaktif (Disembunyikan)',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: method.isAktif ? const Color(0xFF16A34A) : AppColors.textMuted,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Switch.adaptive(
-                                            value: method.isAktif,
-                                            activeThumbColor: AppColors.primary,
-                                            activeTrackColor: AppColors.primaryLight,
-                                            inactiveThumbColor: Colors.grey,
-                                            inactiveTrackColor: const Color(0xFFE2E8F0),
-                                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                            onChanged: (_) => payVm.toggleActive(method),
-                                          ),
-                                        ],
+                              return StaggeredEntrance(
+                                index: index,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.border),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF1E293B).withValues(alpha: 0.02),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(14),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color: methodColor.withValues(alpha: 0.12),
+                                                    borderRadius: BorderRadius.circular(12),
+                                                  ),
+                                                  child: Icon(methodIcon, color: methodColor, size: 22),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      method.nama,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w800,
+                                                        fontSize: 14,
+                                                        color: AppColors.textPrimary,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 3),
+                                                    StatusBadge(
+                                                      status: method.tipe,
+                                                      type: BadgeType.paymentType,
+                                                      showDot: false,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            PopupMenuButton<String>(
+                                              icon: const Icon(Icons.more_vert_rounded, size: 20, color: AppColors.textMuted),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              onSelected: (val) {
+                                                if (val == 'edit') {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (_) => PaymentMethodFormView(method: method),
+                                                    ),
+                                                  );
+                                                } else if (val == 'delete') {
+                                                  _confirmDelete(method.id, method.nama);
+                                                }
+                                              },
+                                              itemBuilder: (_) => [
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.edit_rounded, size: 18, color: AppColors.info),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit Metode'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.danger),
+                                                      SizedBox(width: 8),
+                                                      Text('Hapus Metode'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+
+                                        // Account Info
+                                        if (method.nomorRekening != null && method.nomorRekening!.isNotEmpty) ...[
+                                          const SizedBox(height: 12),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFF8FAFC),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Icon(Icons.credit_card_rounded, size: 16, color: AppColors.textMuted),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      '${method.nomorRekening} (${method.atasNama ?? '-'})',
+                                                      style: const TextStyle(
+                                                        fontSize: 12,
+                                                        fontWeight: FontWeight.w700,
+                                                        color: AppColors.textPrimary,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                InkWell(
+                                                  onTap: () {
+                                                    Clipboard.setData(ClipboardData(text: method.nomorRekening!));
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      const SnackBar(
+                                                        content: Text('Nomor disalin ke clipboard'),
+                                                        duration: Duration(seconds: 1),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: const Icon(Icons.copy_rounded, size: 14, color: AppColors.textMuted),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+
+                                        const SizedBox(height: 10),
+                                        const Divider(height: 1, color: AppColors.border),
+                                        const SizedBox(height: 6),
+
+                                        // Bottom active toggle
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  width: 8,
+                                                  height: 8,
+                                                  decoration: BoxDecoration(
+                                                    color: method.isAktif ? const Color(0xFF16A34A) : AppColors.textMuted,
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  method.isAktif ? 'Aktif (Pelanggan dapat memilih)' : 'Nonaktif (Disembunyikan)',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: method.isAktif ? const Color(0xFF16A34A) : AppColors.textMuted,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Switch.adaptive(
+                                              value: method.isAktif,
+                                              activeThumbColor: AppColors.primary,
+                                              activeTrackColor: AppColors.primaryLight,
+                                              inactiveThumbColor: Colors.grey,
+                                              inactiveTrackColor: const Color(0xFFE2E8F0),
+                                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                              onChanged: (_) => payVm.toggleActive(method),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
