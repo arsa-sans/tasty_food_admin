@@ -79,6 +79,13 @@ class _PaymentMethodFormViewState extends State<PaymentMethodFormView> {
           backgroundColor: AppColors.success,
         ),
       );
+    } else if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(payVm.errorMessage ?? 'Gagal menyimpan metode pembayaran. Periksa kembali input data.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
     }
   }
 
