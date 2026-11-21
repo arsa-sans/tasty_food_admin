@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/responsive.dart';
+import '../../core/widgets/animated_pressable.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/staggered_entrance.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../core/widgets/app_cached_image.dart';
 import '../../viewmodels/galeri_viewmodel.dart';
@@ -60,17 +62,40 @@ class _GaleriListViewState extends State<GaleriListView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: AnimatedPressable(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const GaleriFormView()),
           );
         },
-        backgroundColor: AppColors.primary,
-        elevation: 3,
-        icon: const Icon(Icons.add_a_photo_rounded, color: Colors.white),
-        label: const Text('Tambah Foto', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+        pressedScale: 0.95,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_a_photo_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Tambah Foto',
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+              ),
+            ],
+          ),
+        ),
       ),
       body: galeriVm.isLoading
           ? const GaleriGridShimmer()
@@ -103,79 +128,82 @@ class _GaleriListViewState extends State<GaleriListView> {
                           itemCount: galeris.length,
                           itemBuilder: (context, index) {
                             final item = galeris[index];
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: AppColors.border),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.02),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              clipBehavior: Clip.antiAlias,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: AppCachedImage(
-                                      imageUrl: item.imageUrl ?? '',
-                                      fit: BoxFit.cover,
-                                      memCacheWidth: 350,
-                                      memCacheHeight: 350,
-                                      fallbackIcon: Icons.image_rounded,
+                            return StaggeredEntrance(
+                              index: index,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.border),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF1E293B).withValues(alpha: 0.02),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(10),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Expanded(
-                                              child: Text(
-                                                item.judul,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w800,
-                                                  fontSize: 13,
-                                                  color: AppColors.textPrimary,
+                                  ],
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: AppCachedImage(
+                                        imageUrl: item.imageUrl ?? '',
+                                        fit: BoxFit.cover,
+                                        memCacheWidth: 350,
+                                        memCacheHeight: 350,
+                                        fallbackIcon: Icons.image_rounded,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(10),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  item.judul,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w800,
+                                                    fontSize: 13,
+                                                    color: AppColors.textPrimary,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                            ),
-                                            InkWell(
-                                              onTap: () => _confirmDelete(item.id, item.judul),
-                                              borderRadius: BorderRadius.circular(6),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(4),
-                                                decoration: BoxDecoration(
-                                                  color: const Color(0xFFFEF2F2),
-                                                  borderRadius: BorderRadius.circular(6),
+                                              AnimatedPressable(
+                                                onTap: () => _confirmDelete(item.id, item.judul),
+                                                borderRadius: BorderRadius.circular(6),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(5),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(0xFFFEF2F2),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.danger),
                                                 ),
-                                                child: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.danger),
                                               ),
+                                            ],
+                                          ),
+                                          if (item.deskripsi != null && item.deskripsi!.isNotEmpty) ...[
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              item.deskripsi!,
+                                              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
-                                        ),
-                                        if (item.deskripsi != null && item.deskripsi!.isNotEmpty) ...[
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            item.deskripsi!,
-                                            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
                                         ],
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             );
                           },
