@@ -72,6 +72,13 @@ class _BeritaFormViewState extends State<BeritaFormView> {
           backgroundColor: AppColors.success,
         ),
       );
+    } else if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(vm.errorMessage ?? 'Gagal menyimpan berita. Periksa kembali input data.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
     }
   }
 
