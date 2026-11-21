@@ -132,6 +132,13 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                         backgroundColor: AppColors.success,
                       ),
                     );
+                  } else if (!success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(orderVm.errorMessage ?? 'Gagal memperbarui status pesanan.'),
+                        backgroundColor: AppColors.danger,
+                      ),
+                    );
                   }
                 },
               ),
@@ -180,21 +187,19 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              RadioGroup<String>(
-                groupValue: selectedPaymentStatus,
-                onChanged: (val) {
-                  if (val != null) {
-                    setModalState(() => selectedPaymentStatus = val);
-                  }
-                },
-                child: Column(
-                  children: statuses.map((s) {
-                    return RadioListTile<String>(
-                      title: Text(s['label']!),
-                      value: s['val']!,
-                    );
-                  }).toList(),
-                ),
+              Column(
+                children: statuses.map((s) {
+                  return RadioListTile<String>(
+                    title: Text(s['label']!),
+                    value: s['val']!,
+                    groupValue: selectedPaymentStatus,
+                    onChanged: (val) {
+                      if (val != null) {
+                        setModalState(() => selectedPaymentStatus = val);
+                      }
+                    },
+                  );
+                }).toList(),
               ),
               const SizedBox(height: 16),
               CustomButton(
@@ -214,6 +219,13 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                       const SnackBar(
                         content: Text('Status pembayaran berhasil diperbarui!'),
                         backgroundColor: AppColors.success,
+                      ),
+                    );
+                  } else if (!success && mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(orderVm.errorMessage ?? 'Gagal memperbarui status pembayaran.'),
+                        backgroundColor: AppColors.danger,
                       ),
                     );
                   }
