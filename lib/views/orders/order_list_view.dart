@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../core/widgets/animated_pressable.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/staggered_entrance.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../viewmodels/order_viewmodel.dart';
@@ -59,10 +61,10 @@ class _OrderListViewState extends State<OrderListView> {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          // 1. Search Bar & Status Pills Carousel
+          // Search Bar & Status Pills
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               children: [
                 // Search Input Field
@@ -78,7 +80,7 @@ class _OrderListViewState extends State<OrderListView> {
                     onChanged: (val) => orderVm.setSearchQuery(val),
                     style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
                     decoration: InputDecoration(
-                      hintText: 'Cari kode TF-..., nama pelanggan, no telp...',
+                      hintText: 'Cari kode TF..., nama pelanggan, no telp...',
                       hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
                       prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.textMuted),
                       suffixIcon: _searchController.text.isNotEmpty
@@ -99,7 +101,7 @@ class _OrderListViewState extends State<OrderListView> {
 
                 // Status Tabs Horizontal Scroll
                 SizedBox(
-                  height: 34,
+                  height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: orderVm.statusTabs.length,
@@ -116,18 +118,28 @@ class _OrderListViewState extends State<OrderListView> {
                       if (statusKey == 'selesai') label = 'Selesai';
                       if (statusKey == 'dibatalkan') label = 'Dibatalkan';
 
-                      return InkWell(
+                      return AnimatedPressable(
                         onTap: () => orderVm.setStatus(statusKey),
+                        pressedScale: 0.95,
                         borderRadius: BorderRadius.circular(20),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected ? AppColors.secondary : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected ? AppColors.secondary : AppColors.border,
                             ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.secondary.withValues(alpha: 0.15),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Text(
                             label,
@@ -146,7 +158,7 @@ class _OrderListViewState extends State<OrderListView> {
             ),
           ),
 
-          // 2. Orders Counter Strip
+          // Orders Counter Strip
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: const BoxDecoration(
@@ -172,7 +184,7 @@ class _OrderListViewState extends State<OrderListView> {
             ),
           ),
 
-          // 3. Orders List Body with Shimmer
+          // Orders List Body with Staggered Entrance
           Expanded(
             child: orderVm.isLoading
                 ? const OrderListShimmer()
@@ -193,278 +205,297 @@ class _OrderListViewState extends State<OrderListView> {
                               final order = orders[index];
                               final isPending = order.status == 'menunggu_konfirmasi';
 
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: isPending ? const Color(0xFFFDBA74) : AppColors.border,
-                                    width: isPending ? 1.5 : 1,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: isPending
-                                          ? AppColors.primary.withValues(alpha: 0.06)
-                                          : Colors.black.withValues(alpha: 0.02),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 3),
+                              return StaggeredEntrance(
+                                index: index,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isPending ? const Color(0xFFFDBA74) : AppColors.border,
+                                      width: isPending ? 1.5 : 1,
                                     ),
-                                  ],
-                                ),
-                                child: InkWell(
-                                  onTap: () {
-                                    orderVm.selectOrder(order);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => OrderDetailView(order: order),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: isPending
+                                            ? AppColors.primary.withValues(alpha: 0.06)
+                                            : const Color(0xFF1E293B).withValues(alpha: 0.02),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
                                       ),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(14),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Header Row: Code with copy button + StatusBadge
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(0xFFF1F5F9),
-                                                    borderRadius: BorderRadius.circular(6),
-                                                  ),
-                                                  child: Text(
-                                                    order.orderCode,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.w800,
-                                                      fontSize: 12,
-                                                      color: AppColors.secondary,
-                                                      letterSpacing: 0.3,
+                                    ],
+                                  ),
+                                  child: AnimatedPressable(
+                                    onTap: () {
+                                      orderVm.selectOrder(order);
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => OrderDetailView(order: order),
+                                        ),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(14),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Header Row: Code with copy button + StatusBadge
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(0xFFF1F5F9),
+                                                      borderRadius: BorderRadius.circular(6),
+                                                    ),
+                                                    child: Text(
+                                                      order.orderCode,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w800,
+                                                        fontSize: 12,
+                                                        color: AppColors.secondary,
+                                                        letterSpacing: 0.3,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                IconButton(
-                                                  icon: const Icon(Icons.copy_rounded, size: 14, color: AppColors.textMuted),
-                                                  visualDensity: VisualDensity.compact,
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(),
-                                                  onPressed: () {
-                                                    Clipboard.setData(ClipboardData(text: order.orderCode));
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text('Kode pesanan disalin'),
-                                                        duration: Duration(seconds: 1),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                            StatusBadge(status: order.status),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 10),
-
-                                        // Customer Info Row
-                                        Row(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 14,
-                                              backgroundColor: AppColors.primaryLight,
-                                              child: const Icon(Icons.person, size: 14, color: AppColors.primary),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              order.namaPelanggan,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 13,
-                                                color: AppColors.textPrimary,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 10),
-                                            Text(
-                                              order.telepon,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: AppColors.textSecondary,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-
-                                        // Delivery Address Snippet
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
-                                            const SizedBox(width: 6),
-                                            Expanded(
-                                              child: Text(
-                                                order.alamatLengkap,
-                                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        // Items Preview Container
-                                        if (order.items.isNotEmpty) ...[
-                                          const SizedBox(height: 10),
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFF8FAFC),
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                                            ),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: order.items.take(2).map((it) {
-                                                return Padding(
-                                                  padding: const EdgeInsets.symmetric(vertical: 2),
-                                                  child: Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Expanded(
-                                                        child: Text(
-                                                          '${it.jumlah}x ${it.namaMenu}',
-                                                          style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow.ellipsis,
+                                                  const SizedBox(width: 4),
+                                                  IconButton(
+                                                    icon: const Icon(Icons.copy_rounded, size: 14, color: AppColors.textMuted),
+                                                    visualDensity: VisualDensity.compact,
+                                                    padding: EdgeInsets.zero,
+                                                    constraints: const BoxConstraints(),
+                                                    onPressed: () {
+                                                      Clipboard.setData(ClipboardData(text: order.orderCode));
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        const SnackBar(
+                                                          content: Text('Kode pesanan disalin'),
+                                                          duration: Duration(seconds: 1),
                                                         ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                              StatusBadge(status: order.status),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 10),
+
+                                          // Customer Info Row
+                                          Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 14,
+                                                backgroundColor: AppColors.primaryLight,
+                                                child: const Icon(Icons.person, size: 14, color: AppColors.primary),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                order.namaPelanggan,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 13,
+                                                  color: AppColors.textPrimary,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 10),
+                                              Text(
+                                                order.telepon,
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+
+                                          // Delivery Address Snippet
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: Text(
+                                                  order.alamatLengkap,
+                                                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // Items Preview Container
+                                          if (order.items.isNotEmpty) ...[
+                                            const SizedBox(height: 10),
+                                            Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF8FAFC),
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: order.items.take(2).map((it) {
+                                                  return Padding(
+                                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                                    child: Row(
+                                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            '${it.jumlah}x ${it.namaMenu}',
+                                                            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                                                            maxLines: 1,
+                                                            overflow: TextOverflow.ellipsis,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          it.formattedSubtotal,
+                                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                            ),
+                                          ],
+
+                                          // Customer Note if any
+                                          if (order.catatan != null && order.catatan!.isNotEmpty) ...[
+                                            const SizedBox(height: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFFFBEB),
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: const Color(0xFFFDE68A)),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  const Icon(Icons.notes_rounded, size: 12, color: Color(0xFFB45309)),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Catatan: "${order.catatan}"',
+                                                      style: const TextStyle(fontSize: 11, color: Color(0xFFB45309), fontStyle: FontStyle.italic),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+
+                                          const SizedBox(height: 10),
+                                          const Divider(height: 1, color: AppColors.border),
+                                          const SizedBox(height: 10),
+
+                                          // Total Price & Actions
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      StatusBadge(
+                                                        status: order.statusPembayaran,
+                                                        type: BadgeType.paymentStatus,
+                                                        showDot: false,
                                                       ),
+                                                      const SizedBox(width: 6),
                                                       Text(
-                                                        it.formattedSubtotal,
-                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                                        order.createdAt != null
+                                                            ? Formatters.formatTime(order.createdAt!)
+                                                            : '',
+                                                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                                                       ),
                                                     ],
                                                   ),
-                                                );
-                                              }).toList(),
-                                            ),
-                                          ),
-                                        ],
-
-                                        // Customer Note if any
-                                        if (order.catatan != null && order.catatan!.isNotEmpty) ...[
-                                          const SizedBox(height: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: const Color(0xFFFFFBEB),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(color: const Color(0xFFFDE68A)),
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                const Icon(Icons.notes_rounded, size: 12, color: Color(0xFFB45309)),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Text(
-                                                    'Catatan: "${order.catatan}"',
-                                                    style: const TextStyle(fontSize: 11, color: Color(0xFFB45309), fontStyle: FontStyle.italic),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-
-                                        const SizedBox(height: 10),
-                                        const Divider(height: 1, color: AppColors.border),
-                                        const SizedBox(height: 10),
-
-                                        // Total Price & Actions
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    StatusBadge(
-                                                      status: order.statusPembayaran,
-                                                      type: BadgeType.paymentStatus,
-                                                      showDot: false,
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      order.createdAt != null
-                                                          ? Formatters.formatTime(order.createdAt!)
-                                                          : '',
-                                                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-                                                    ),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  order.formattedTotal,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w900,
-                                                    fontSize: 15,
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            Row(
-                                              children: [
-                                                if (isPending) ...[
-                                                  ElevatedButton(
-                                                    onPressed: () => _quickAcceptOrder(order.id),
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor: AppColors.primary,
-                                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                      elevation: 0,
-                                                    ),
-                                                    child: const Text(
-                                                      'Terima Pesanan',
-                                                      style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    order.formattedTotal,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 15,
+                                                      color: AppColors.primary,
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
                                                 ],
-                                                OutlinedButton(
-                                                  onPressed: () {
-                                                    orderVm.selectOrder(order);
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (_) => OrderDetailView(order: order),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  if (isPending) ...[
+                                                    InkWell(
+                                                      onTap: () => _quickAcceptOrder(order.id),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                                        decoration: BoxDecoration(
+                                                          color: AppColors.primary,
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: AppColors.primary.withValues(alpha: 0.25),
+                                                              blurRadius: 6,
+                                                              offset: const Offset(0, 2),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: const Text(
+                                                          'Terima Pesanan',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 11,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
                                                       ),
-                                                    );
-                                                  },
-                                                  style: OutlinedButton.styleFrom(
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                  ],
+                                                  Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                    side: const BorderSide(color: AppColors.border),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      border: Border.all(color: AppColors.border),
+                                                    ),
+                                                    child: const Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        Text(
+                                                          'Rincian',
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            fontWeight: FontWeight.w700,
+                                                            color: AppColors.textPrimary,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 2),
+                                                        Icon(Icons.chevron_right_rounded, size: 14, color: AppColors.textSecondary),
+                                                      ],
+                                                    ),
                                                   ),
-                                                  child: const Text(
-                                                    'Rincian',
-                                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
