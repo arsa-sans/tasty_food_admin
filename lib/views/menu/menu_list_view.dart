@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/animated_pressable.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/staggered_entrance.dart';
 import '../../core/widgets/shimmer_loading.dart';
 import '../../core/widgets/app_cached_image.dart';
 import '../../viewmodels/menu_viewmodel.dart';
@@ -74,27 +76,51 @@ class _MenuListViewState extends State<MenuListView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+      floatingActionButton: AnimatedPressable(
+        onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const MenuFormView()),
           );
         },
-        backgroundColor: AppColors.primary,
-        elevation: 3,
-        icon: const Icon(Icons.add_rounded, color: Colors.white),
-        label: const Text(
-          'Tambah Menu',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+        pressedScale: 0.95,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.add_rounded, color: Colors.white, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Tambah Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       body: Column(
         children: [
-          // 1. Search Bar & Summary Strip
+          // Search Bar & Categories
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -132,7 +158,7 @@ class _MenuListViewState extends State<MenuListView> {
 
                 // Category Chips Carousel
                 SizedBox(
-                  height: 34,
+                  height: 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: menuVm.categories.length,
@@ -141,18 +167,28 @@ class _MenuListViewState extends State<MenuListView> {
                       final cat = menuVm.categories[index];
                       final isSelected = menuVm.selectedCategory == cat;
 
-                      return InkWell(
+                      return AnimatedPressable(
                         onTap: () => menuVm.setCategory(cat),
+                        pressedScale: 0.95,
                         borderRadius: BorderRadius.circular(20),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
                             color: isSelected ? AppColors.primary : Colors.white,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
                               color: isSelected ? AppColors.primary : AppColors.border,
                             ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.2),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Text(
                             cat,
@@ -171,7 +207,7 @@ class _MenuListViewState extends State<MenuListView> {
             ),
           ),
 
-          // 2. Stock Summary Header Pill
+          // Stock Summary Header Pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: const BoxDecoration(
@@ -192,7 +228,7 @@ class _MenuListViewState extends State<MenuListView> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFDCFCE7),
                         borderRadius: BorderRadius.circular(6),
@@ -209,7 +245,7 @@ class _MenuListViewState extends State<MenuListView> {
                     if (outOfStockCount > 0) ...[
                       const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEE2E2),
                           borderRadius: BorderRadius.circular(6),
@@ -230,7 +266,7 @@ class _MenuListViewState extends State<MenuListView> {
             ),
           ),
 
-          // 3. Menu List Body with Shimmer
+          // Menu List Body with Staggered Entrance
           Expanded(
             child: menuVm.isLoading
                 ? const MenuListShimmer()
@@ -249,189 +285,193 @@ class _MenuListViewState extends State<MenuListView> {
                             separatorBuilder: (_, __) => const SizedBox(height: 12),
                             itemBuilder: (context, index) {
                               final menu = menus[index];
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.02),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Food Thumbnail Container
-                                      Stack(
-                                        children: [
-                                          AppCachedImage(
-                                            imageUrl: menu.imageUrl ?? '',
-                                            width: 86,
-                                            height: 86,
-                                            borderRadius: BorderRadius.circular(14),
-                                            memCacheWidth: 260,
-                                            memCacheHeight: 260,
-                                            fallbackIcon: Icons.fastfood_rounded,
-                                          ),
-                                          if (!menu.isTersedia)
-                                            Container(
-                                              width: 86,
-                                              height: 86,
-                                              decoration: BoxDecoration(
-                                                color: Colors.black.withValues(alpha: 0.5),
-                                                borderRadius: BorderRadius.circular(14),
-                                              ),
-                                              child: Center(
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: AppColors.danger,
-                                                    borderRadius: BorderRadius.circular(4),
-                                                  ),
-                                                  child: const Text(
-                                                    'HABIS',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 9,
-                                                      fontWeight: FontWeight.w900,
-                                                      letterSpacing: 0.5,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 14),
 
-                                      // Food Information Details
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    menu.nama,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.w800,
-                                                      fontSize: 14,
-                                                      color: AppColors.textPrimary,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                // Edit & Delete actions
-                                                Row(
-                                                  children: [
-                                                    InkWell(
-                                                      onTap: () {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (_) => MenuFormView(menu: menu),
-                                                          ),
-                                                        );
-                                                      },
-                                                      borderRadius: BorderRadius.circular(8),
-                                                      child: Container(
-                                                        padding: const EdgeInsets.all(4),
-                                                        decoration: BoxDecoration(
-                                                          color: const Color(0xFFEFF6FF),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: const Icon(Icons.edit_rounded, size: 16, color: AppColors.info),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    InkWell(
-                                                      onTap: () => _confirmDelete(menu.id, menu.nama),
-                                                      borderRadius: BorderRadius.circular(8),
-                                                      child: Container(
-                                                        padding: const EdgeInsets.all(4),
-                                                        decoration: BoxDecoration(
-                                                          color: const Color(0xFFFEF2F2),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.danger),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-
-                                            // Category Pill
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF1F5F9),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: Text(
-                                                menu.kategori,
-                                                style: const TextStyle(
-                                                  fontSize: 10,
-                                                  color: AppColors.textSecondary,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
-
-                                            // Price & Availability Switch
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(
-                                                  menu.formattedHarga,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w900,
-                                                    fontSize: 14,
-                                                    color: AppColors.primary,
-                                                  ),
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    Text(
-                                                      menu.isTersedia ? 'Tersedia' : 'Habis',
-                                                      style: TextStyle(
-                                                        fontSize: 11,
-                                                        fontWeight: FontWeight.w700,
-                                                        color: menu.isTersedia ? const Color(0xFF16A34A) : AppColors.danger,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Switch.adaptive(
-                                                      value: menu.isTersedia,
-                                                      activeThumbColor: AppColors.primary,
-                                                      activeTrackColor: AppColors.primaryLight,
-                                                      inactiveThumbColor: Colors.grey,
-                                                      inactiveTrackColor: const Color(0xFFE2E8F0),
-                                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                                      onChanged: (_) {
-                                                        menuVm.toggleAvailability(menu);
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
+                              return StaggeredEntrance(
+                                index: index,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: AppColors.border),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF1E293B).withValues(alpha: 0.02),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        // Food Thumbnail Container
+                                        Stack(
+                                          children: [
+                                            AppCachedImage(
+                                              imageUrl: menu.imageUrl ?? '',
+                                              width: 86,
+                                              height: 86,
+                                              borderRadius: BorderRadius.circular(14),
+                                              memCacheWidth: 260,
+                                              memCacheHeight: 260,
+                                              fallbackIcon: Icons.fastfood_rounded,
+                                            ),
+                                            if (!menu.isTersedia)
+                                              Container(
+                                                width: 86,
+                                                height: 86,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black.withValues(alpha: 0.5),
+                                                  borderRadius: BorderRadius.circular(14),
+                                                ),
+                                                child: Center(
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.danger,
+                                                      borderRadius: BorderRadius.circular(4),
+                                                    ),
+                                                    child: const Text(
+                                                      'HABIS',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 9,
+                                                        fontWeight: FontWeight.w900,
+                                                        letterSpacing: 0.5,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        const SizedBox(width: 14),
+
+                                        // Food Information Details
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      menu.nama,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w800,
+                                                        fontSize: 14,
+                                                        color: AppColors.textPrimary,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  // Edit & Delete actions
+                                                  Row(
+                                                    children: [
+                                                      AnimatedPressable(
+                                                        onTap: () {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (_) => MenuFormView(menu: menu),
+                                                            ),
+                                                          );
+                                                        },
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(5),
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFFEFF6FF),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: const Icon(Icons.edit_rounded, size: 16, color: AppColors.info),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      AnimatedPressable(
+                                                        onTap: () => _confirmDelete(menu.id, menu.nama),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        child: Container(
+                                                          padding: const EdgeInsets.all(5),
+                                                          decoration: BoxDecoration(
+                                                            color: const Color(0xFFFEF2F2),
+                                                            borderRadius: BorderRadius.circular(8),
+                                                          ),
+                                                          child: const Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.danger),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 4),
+
+                                              // Category Pill
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: const Color(0xFFF1F5F9),
+                                                  borderRadius: BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  menu.kategori,
+                                                  style: const TextStyle(
+                                                    fontSize: 10,
+                                                    color: AppColors.textSecondary,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+
+                                              // Price & Availability Switch
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Text(
+                                                    menu.formattedHarga,
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 14,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                  ),
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        menu.isTersedia ? 'Tersedia' : 'Habis',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w700,
+                                                          color: menu.isTersedia ? const Color(0xFF16A34A) : AppColors.danger,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Switch.adaptive(
+                                                        value: menu.isTersedia,
+                                                        activeThumbColor: AppColors.primary,
+                                                        activeTrackColor: AppColors.primaryLight,
+                                                        inactiveThumbColor: Colors.grey,
+                                                        inactiveTrackColor: const Color(0xFFE2E8F0),
+                                                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                                        onChanged: (_) {
+                                                          menuVm.toggleAvailability(menu);
+                                                        },
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               );
