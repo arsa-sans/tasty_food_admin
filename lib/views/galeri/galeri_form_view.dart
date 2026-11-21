@@ -68,6 +68,13 @@ class _GaleriFormViewState extends State<GaleriFormView> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Foto galeri berhasil disimpan!'), backgroundColor: AppColors.success),
       );
+    } else if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(vm.errorMessage ?? 'Gagal menyimpan foto. Periksa kembali input data.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
     }
   }
 
